@@ -15,8 +15,8 @@ const PK_THAT_HAVE_FAILED_TO_RECEIVE_AIR_DROP: Readonly<Status> = "hasFailed";
 const POST_HASH_HEX_TO_COMMENT_ON: Readonly<PostHashHex> =
   "16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a"; // https://diamondapp.com/posts/16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a?tab=posts
 const DAO_COIN_USERNAME: Readonly<string> = "DesoDollar";
-const AMOUNT_TO_SEND: Readonly<string> = "0x1"; // 1 dollar
-const AMOUNT_TO_SEND_OGS: Readonly<string> = "0x32"; //  5 dollars
+const AMOUNT_TO_SEND: Readonly<string> = "0xDE0B6B3A7640000"; // 1 dollar
+const AMOUNT_TO_SEND_OGS: Readonly<string> = "0x8AC7230489E80000"; //  10 dollars
 const MinFeeRateNanosPerKB: Readonly<number> = 1000;
 const PORT: Readonly<number> = 3000;
 // services
@@ -33,6 +33,7 @@ const getSenderPublicKey = () => {
   return SenderPublicKeyBase58Check;
 };
 const senderPK = getSenderPublicKey();
+console.log(senderPK);
 const getAllCommentersFromPost = async (
   CommentLimit = 30,
   CommentOffset = 0,
@@ -169,10 +170,10 @@ const determineAmountToSend = async (commenter: PublicKey): Promise<string> => {
     );
     const accountAge = response?.data?.value?.AccountAge.Days ?? 0;
     console.log("account age for:", commenter, accountAge);
-    return accountAge > 365 ? AMOUNT_TO_SEND_OGS : AMOUNT_TO_SEND;
+    return accountAge > 364 ? AMOUNT_TO_SEND_OGS : AMOUNT_TO_SEND;
   } catch (e) {
     console.log(e);
-    return AMOUNT_TO_SEND; // something went wrong talking to open prosper let's just send them the default amount?
+    throw "unable to access open prosper api";
   }
 };
 
