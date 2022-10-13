@@ -112,10 +112,11 @@ const sendFunds = async (commenter: PublicKey): Promise<boolean> => {
     });
     const SenderPublicKeyBase58Check =
       deso.utils.privateKeyToDeSoPublicKey(keyPair);
+    const amountToSend = determineAmountToSend(commenter);
     const transaction = await deso.dao.transferDAOCoin({
       ReceiverPublicKeyBase58CheckOrUsername: commenter,
       SenderPublicKeyBase58Check,
-      DAOCoinToTransferNanos: AMOUNT_TO_SEND,
+      DAOCoinToTransferNanos: amountToSend,
       MinFeeRateNanosPerKB: MinFeeRateNanosPerKB,
       ProfilePublicKeyBase58CheckOrUsername: DAO_COIN_USERNAME,
     });
@@ -151,6 +152,10 @@ const sendFunds = async (commenter: PublicKey): Promise<boolean> => {
   } catch (e) {
     throw `something went wrong when sending to ${commenter} `;
   }
+};
+const determineAmountToSend = (commenter: PublicKey) => {
+  console.log("figuring this out at the moment");
+  return AMOUNT_TO_SEND;
 };
 
 // note no longer need this but keeping it here because its a good reference on how to query twitter
