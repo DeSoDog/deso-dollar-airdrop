@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "@types/node": "^18.8.5",
     "@types/node-cron": "^3.0.4",
     "bip39": "^3.0.3",
     "cors": "^2.8.5",

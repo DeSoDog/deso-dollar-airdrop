@@ -4,7 +4,7 @@ import { Deso } from "deso-protocol";
 import { PostEntryResponse } from "deso-protocol-types";
 import express from "express";
 import DB from "simple-json-db";
-
+import axios from "axios";
 // types
 type PublicKey = string;
 type PostHashHex = string;
@@ -15,7 +15,8 @@ const PK_THAT_HAVE_FAILED_TO_RECEIVE_AIR_DROP: Readonly<Status> = "hasFailed";
 const POST_HASH_HEX_TO_COMMENT_ON: Readonly<PostHashHex> =
   "16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a"; // https://diamondapp.com/posts/16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a?tab=posts
 const DAO_COIN_USERNAME: Readonly<string> = "DesoDollar";
-const AMOUNT_TO_SEND: Readonly<string> = "0x1"; // 5 dollars = '0x32'
+const AMOUNT_TO_SEND: Readonly<string> = "0x1"; // 1 dollar
+const AMOUNT_TO_SEND_OGS: Readonly<string> = "0x32"; //  5 dollars
 const MinFeeRateNanosPerKB: Readonly<number> = 1000;
 const PORT: Readonly<number> = 3000;
 // services
@@ -32,7 +33,7 @@ const getSenderPublicKey = () => {
   return SenderPublicKeyBase58Check;
 };
 const senderPK = getSenderPublicKey();
-const getAllCommenterFromPost = async (
+const getAllCommentersFromPost = async (
   CommentLimit = 30,
   CommentOffset = 0,
   existingComments: PostEntryResponse[] = []
@@ -59,7 +60,7 @@ const getAllCommenterFromPost = async (
     30,
     response.PostFound.CommentCount - CommentOffset
   );
-  return getAllCommenterFromPost(amountToGet, CommentOffset + amountToGet, [
+  return getAllCommentersFromPost(amountToGet, CommentOffset + amountToGet, [
     ...existingComments,
     ...response.PostFound.Comments,
   ]);
@@ -68,7 +69,7 @@ const getAllCommenterFromPost = async (
 app.listen(PORT, async () => {
   db.set(PK_THAT_HAVE_RECEIVED_AIR_DROP, []);
   db.set(PK_THAT_HAVE_FAILED_TO_RECEIVE_AIR_DROP, []);
-  const publicKeys = await getAllCommenterFromPost();
+  const publicKeys = await getAllCommentersFromPost();
   distributeFunds(publicKeys)
     .then()
     .catch((e) => {
@@ -112,7 +113,7 @@ const sendFunds = async (commenter: PublicKey): Promise<boolean> => {
     });
     const SenderPublicKeyBase58Check =
       deso.utils.privateKeyToDeSoPublicKey(keyPair);
-    const amountToSend = determineAmountToSend(commenter);
+    const amountToSend = await determineAmountToSend(commenter);
     const transaction = await deso.dao.transferDAOCoin({
       ReceiverPublicKeyBase58CheckOrUsername: commenter,
       SenderPublicKeyBase58Check,
@@ -153,9 +154,26 @@ const sendFunds = async (commenter: PublicKey): Promise<boolean> => {
     throw `something went wrong when sending to ${commenter} `;
   }
 };
-const determineAmountToSend = (commenter: PublicKey) => {
-  console.log("figuring this out at the moment");
-  return AMOUNT_TO_SEND;
+const determineAmountToSend = async (commenter: PublicKey): Promise<string> => {
+  try {
+    const response = await axios.post(
+      "https://openprosperapi.xyz/api/v0/i/account-overview",
+      {
+        PublicKeyBase58: commenter,
+      },
+      {
+        headers: {
+          "op-token": "U2FsdGVkX197EFYz9VzwvpcJvimHv4OejcU5LS0534o=''",
+        },
+      }
+    );
+    const accountAge = response?.data?.value?.AccountAge.Days ?? 0;
+    console.log("account age for:", commenter, accountAge);
+    return accountAge > 365 ? AMOUNT_TO_SEND_OGS : AMOUNT_TO_SEND;
+  } catch (e) {
+    console.log(e);
+    return AMOUNT_TO_SEND; // something went wrong talking to open prosper let's just send them the default amount?
+  }
 };
 
 // note no longer need this but keeping it here because its a good reference on how to query twitter
