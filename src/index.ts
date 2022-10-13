@@ -13,7 +13,7 @@ type Status = "hasReceived" | "hasFailed";
 const PK_THAT_HAVE_RECEIVED_AIR_DROP: Readonly<Status> = "hasReceived";
 const PK_THAT_HAVE_FAILED_TO_RECEIVE_AIR_DROP: Readonly<Status> = "hasFailed";
 const POST_HASH_HEX_TO_COMMENT_ON: Readonly<PostHashHex> =
-  "16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a"; // https://diamondapp.com/posts/16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a?tab=posts
+  "324d14bf3ac4d8c993662899ee894c18a606df07ff5e37cb48ca33fcc5bf6fb2"; // https://diamondapp.com/posts/16ecd506f5aaa9649886632d428d82af12bfaba89bad3e372a6a1b02a82a234a?tab=posts
 const DAO_COIN_USERNAME: Readonly<string> = "DesoDollar";
 const AMOUNT_TO_SEND: Readonly<string> = "0xDE0B6B3A7640000"; // 1 dollar
 const AMOUNT_TO_SEND_OGS: Readonly<string> = "0x8AC7230489E80000"; //  10 dollars
@@ -33,7 +33,6 @@ const getSenderPublicKey = () => {
   return SenderPublicKeyBase58Check;
 };
 const senderPK = getSenderPublicKey();
-console.log(senderPK);
 const getAllCommentersFromPost = async (
   CommentLimit = 30,
   CommentOffset = 0,
@@ -61,16 +60,19 @@ const getAllCommentersFromPost = async (
     30,
     response.PostFound.CommentCount - CommentOffset
   );
+  console.log(existingComments.length);
   return getAllCommentersFromPost(amountToGet, CommentOffset + amountToGet, [
     ...existingComments,
-    ...response.PostFound.Comments,
+    ...(response.PostFound.Comments ?? []),
   ]);
   // def add pagination
 };
 app.listen(PORT, async () => {
   db.set(PK_THAT_HAVE_RECEIVED_AIR_DROP, []);
   db.set(PK_THAT_HAVE_FAILED_TO_RECEIVE_AIR_DROP, []);
+  console.log("starting");
   const publicKeys = await getAllCommentersFromPost();
+  console.log(publicKeys);
   distributeFunds(publicKeys)
     .then()
     .catch((e) => {
