@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "@types/node": "^18.8.5",
     "@types/node-cron": "^3.0.4",
     "bip39": "^3.0.3",
     "cors": "^2.8.5",
@@ -25,6 +26,7 @@
   },
   "scripts": {
     "start": "npx tsc && node ./dist/index.js",
+    "stuff": "npx tsc && node ./dist/stats.js",
     "build": "npx tsc",
     "run": "node ./dist/index.js"
   }

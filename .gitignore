@@ -1,2 +1,4 @@
 /node_modules
 /src/shh.ts
+/dist
+.env
